@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/siginfo.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define ROWNUM 8
 
@@ -137,7 +138,7 @@ int io_open(resmgr_context_t *ctp, io_open_t *msg, RESMGR_HANDLE_T *handle, void
 
 int main(int argc, char** argv) {
 
-	double beats, top_sig, bot_sig, interval;
+	double beats, top_sig, bot_sig, interval = -1;
 	pthread_attr_t attr; // Thread attribute
 
 
@@ -166,11 +167,12 @@ int main(int argc, char** argv) {
 			interval = t[i].interval;
 			pattern = t[i].pattern;
 			break;
-		}else{
-			perror("Invalid combo\n");
-			exit(EXIT_FAILURE);
 		}
 
+	}
+	if(interval == -1){
+		perror("Invalid combo\n");
+		exit(EXIT_FAILURE);
 	}
 
 	space = (60 / beats) * top_sig/interval;
@@ -235,7 +237,6 @@ void *printThread(void *arg){
 	timer_t timer_id;
 	my_message_t msg;
 
-
 	event.sigev_notify = SIGEV_PULSE;
 	event.sigev_coid = ConnectAttach(ND_LOCAL_NODE, 0,att->chid,_NTO_SIDE_CHANNEL, 0);
 	event.sigev_priority = SchedGet(0,0,NULL);
@@ -259,6 +260,8 @@ void *printThread(void *arg){
 				printPattern(pattern);
 			} else if(msg.pulse.code == MY_PULSE_PAUSE){
 				sleep(4);
+
+
 			}
 		}
 
